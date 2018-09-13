@@ -2,7 +2,7 @@
 Robot Control Language
 
 # why?
-I started a project dealing with robots, so I thought it's a perfect opportunity to dust my flex/bison skills. The goal it to create a simple interptreter, that can execute commands coming from a TCP/IP server.
+I started a project dealing with robots, so I thought it's a perfect opportunity to dust off my flex/bison skills. The goal it to create a simple interptreter, that can execute commands coming from a TCP/IP server.
 
 This is an early version of the implmenetation of rcl.
 
