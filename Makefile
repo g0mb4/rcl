@@ -5,14 +5,14 @@ PREFIX=c:\SysGCC\raspberry\bin\arm-linux-gnueabihf-
 SSH_USER=gmb
 SSH_PWD=123456
 SSH_HOST=192.168.0.21
-SCP="C:\Program Files (x86)\WinSCP\WinSCP.com"
+SCP="c:\Program Files (x86)\WinSCP\WinSCP.com"
 
 CC=$(PREFIX)gcc
 CXX=$(PREFIX)g++
 SIZE=$(PREFIX)size
 
-FLEX=..\flexbison\bin\win_flex.exe
-BISON=..\flexbison\bin\win_bison.exe
+FLEX=c:\flexbison\bin\win_flex.exe
+BISON=c:\flexbison\bin\win_bison.exe
 
 CFLAGS=-Wall
 DEBUGFLAGS=-g -D _DEBUG -pg
