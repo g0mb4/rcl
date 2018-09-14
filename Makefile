@@ -4,8 +4,8 @@ PREFIX=c:\SysGCC\raspberry\bin\arm-linux-gnueabihf-
 
 SSH_USER=gmb
 SSH_PWD=123456
-SSH_HOST=192.168.0.21
-SCP="c:\Program Files (x86)\WinSCP\WinSCP.com"
+SSH_HOST=192.168.0.1
+SCP="C:\Program Files (x86)\WinSCP\WinSCP.com"
 
 CC=$(PREFIX)gcc
 CXX=$(PREFIX)g++
@@ -23,12 +23,14 @@ bison: $(PROJECT).y
 flex: $(PROJECT).l $(PROJECT).tab.h
 	$(FLEX) $(PROJECT).l
 
-rcl: bison flex $(PROJECT).tab.c lex.yy.c $(PROJECT).c $(PROJECT)_fcns.c main.c
+cfiles:
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c $(PROJECT).tab.c
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c lex.yy.c
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c $(PROJECT).c
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c $(PROJECT)_fcns.c
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c main.c
+
+rcl: bison flex cfiles
 	$(CC) -o $(PROJECT) main.o $(PROJECT).tab.o lex.yy.o $(PROJECT).o $(PROJECT)_fcns.o
 
 release: rcl

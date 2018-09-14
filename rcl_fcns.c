@@ -1,13 +1,12 @@
 #include "rcl.h"
 
-int conn_get(rcl_type_t * param){
-	if(param != NULL){
-		printf("conn: use without a parameter!\n");
-		return -1;
+void conn_get(rcl_type_t * out, rcl_type_t * in){
+	/* no parameter is needed for this example */
+	if(in != NULL){
+		rcl_copy(out, rcl_null());
 	}
 
-	printf("works!");
-	return 0;
+	rcl_copy(out, rcl_string("works!"));
 }
 
 const rcl_attr_desc_t rcl_attr_fcns[] = {

@@ -2,32 +2,23 @@
 
 #include "rcl.h"
 
-typedef struct yy_buffer_state * YY_BUFFER_STATE;
-extern int yyparse(void);
-extern YY_BUFFER_STATE yy_scan_string(char * str);
-extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
-
-extern char error_msg[256];
-
 int main(int argc, char ** argv){
+	char string[256], parse_output_str[1024];
+	struct S_RCL_TYPE * parse_output = rcl_null();
+
 #ifdef _DEBUG
 	printf("Debug mode. %s %s\n", __DATE__, __TIME__);
 #endif
-	char string[256];
 
+	memset(parse_output_str, 0, 1024);
 	printf("Robot Control Language\n\n");
-	strcpy(error_msg, "");
 	for(;;){
 		printf("> ");
 		fgets(string, 256, stdin);
-    	YY_BUFFER_STATE buffer = yy_scan_string(string);
-    	yyparse();
-    	yy_delete_buffer(buffer);
-
-		if (strlen(error_msg) != 0) {
-			fprintf(stderr, "ERROR: %s", error_msg);
-			memset(error_msg, 0, 256);
-		}
+    	rcl_parse(parse_output, string);
+		rcl_val_to_string(parse_output_str, parse_output);
+		printf("%s\n", parse_output_str);
+		memset(parse_output_str, 0, 1024);
 	}
 
 	return 0;
