@@ -35,7 +35,7 @@ const rcl_attr_desc_t rcl_attr_fcns[] = {
 	{ NULL, NULL, NULL, NULL, NULL, NULL }
 };
 ```
-A functions have the signature of ```void fcn(rcl_type_t * /* out */, rcl_type_t * /* in */ )``` in every case, as you can see in ```rcl.h / struct S_RCL_ATTR_DESC```.
+The functions have the signature of ```void fcn(rcl_type_t * /* out */, rcl_type_t * /* in */ )``` in every case, as you can see in ```rcl.h / struct S_RCL_ATTR_DESC```.
 A simple example for the ```get``` operator on the ```conn``` attribute, which has been added to the  ```rcl_attr_fcns[]```, can be seen bellow.
 ```
 void conn_get(rcl_type_t * out, rcl_type_t * in){
