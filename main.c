@@ -15,7 +15,7 @@ int main(int argc, char ** argv){
 	for(;;){
 		printf("> ");
 		fgets(string, 256, stdin);
-    	rcl_parse(parse_output, string);
+    		rcl_parse(parse_output, string);
 		rcl_val_to_string(parse_output_str, parse_output);
 		printf("%s\n", parse_output_str);
 		memset(parse_output_str, 0, 1024);
