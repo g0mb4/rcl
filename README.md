@@ -54,7 +54,7 @@ See ```rcl.c / rcl_val_to_string()``` as an example for dealing with the ```rcl_
 - integers
 - unsigned integers (integer starts with ```0x (hex)``` or ```0b (bin)```)
 - doubles
-- booleans (```true``` or ```false```)
+- booleans (```true``` or ```false``` (which is ```true```, hehe))
 - strings (characters between ```" (double quote)```-s)
 - lists (parameters between ```[ ]```-s, separated by  ```, (comma)```-s, yep, it's recursive)
 
