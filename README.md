@@ -52,9 +52,16 @@ See ```rcl.c / rcl_val_to_string()``` as an example for dealing with the ```rcl_
 
 *parameters can be*:
 - null-s (indication of the NULL value)
+<<<<<<< HEAD
 - numbers
 - bytes (integer starts with ```0x (hex)``` or ```0b (bin)```)
 - booleans (```true``` or ```false```)
+=======
+- integers
+- unsigned integers (integer starts with ```0x (hex)``` or ```0b (bin)```)
+- doubles
+- booleans (```true``` or ```false``` (which is ```true```, hehe))
+>>>>>>> a23bfe05512cf36fb8ccbbfcc847720c605c2bf3
 - strings (characters between ```" (double quote)```-s)
 - lists (parameters between ```[ ]```-s, separated by  ```, (comma)```-s, yep, it's recursive)
 
