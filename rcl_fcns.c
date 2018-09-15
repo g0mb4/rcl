@@ -1,8 +1,7 @@
 #include "rcl.h"
 
 void conn_get(rcl_type_t * out, rcl_type_t * in){
-	/* no parameter is needed for this example */
-	if(in != NULL){
+	if(in->type != T_NULL){
 		rcl_copy(out, rcl_null());
 	}
 

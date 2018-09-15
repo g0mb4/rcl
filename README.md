@@ -39,9 +39,10 @@ The functions have the signature of ```void fcn(rcl_type_t * /* out */, rcl_type
 A simple example for the ```get``` operator on the ```conn``` attribute, which has been added to the  ```rcl_attr_fcns[]```, can be seen bellow.
 ```
 void conn_get(rcl_type_t * out, rcl_type_t * in){
-	/* no parameter is needed for this example */
-	if(in != NULL){
+	/* no in is allowed for this */
+	if(in->type != T_NULL){
 		rcl_copy(out, rcl_null());
+		return;
 	}
 
 	rcl_copy(out, rcl_string("works!"));
@@ -51,9 +52,8 @@ See ```rcl.c / rcl_val_to_string()``` as an example for dealing with the ```rcl_
 
 *parameters can be*:
 - null-s (indication of the NULL value)
-- integers
-- unsigned integers (integer starts with ```0x (hex)``` or ```0b (bin)```)
-- doubles
+- numbers
+- bytes (integer starts with ```0x (hex)``` or ```0b (bin)```)
 - booleans (```true``` or ```false```)
 - strings (characters between ```" (double quote)```-s)
 - lists (parameters between ```[ ]```-s, separated by  ```, (comma)```-s, yep, it's recursive)

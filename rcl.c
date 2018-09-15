@@ -1,6 +1,6 @@
 #include "rcl.h"
 
-int rcl_parse(struct S_RCL_TYPE * parse_output, const char *s){
+int rcl_parse(struct S_RCL_TYPE * parse_output, const char * s){
 	int ret = 0;
 
 	YY_BUFFER_STATE buffer = yy_scan_string(s);
@@ -27,6 +27,45 @@ rcl_type_t * rcl_null(void){
 	return var;
 }
 
+rcl_type_t * rcl_number(double n){
+	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
+	if(var == NULL){
+		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		return NULL;
+	}
+
+	memset(var, 0, sizeof(rcl_type_t));
+	var->type = T_NUM;
+	var->number = n;
+	return var;
+}
+
+rcl_type_t * rcl_byte(uint8_t b){
+	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
+	if(var == NULL){
+		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		return NULL;
+	}
+
+	memset(var, 0, sizeof(rcl_type_t));
+	var->type = T_BYTE;
+	var->byte = b;
+	return var;
+}
+
+struct S_RCL_TYPE * rcl_boolean(bool b){
+	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
+	if(var == NULL){
+		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		return NULL;
+	}
+
+	memset(var, 0, sizeof(rcl_type_t));
+	var->type = T_BOOL;
+	var->boolean = b;
+	return var;
+}
+
 rcl_type_t * rcl_string(const char * s){
 	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
 	if(var == NULL){
@@ -36,59 +75,7 @@ rcl_type_t * rcl_string(const char * s){
 
 	memset(var, 0, sizeof(rcl_type_t));
 	var->type = T_STR;
-	var->sval = strdup(s);
-	return var;
-}
-
-rcl_type_t * rcl_int(int i){
-	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
-	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
-		return NULL;
-	}
-
-	memset(var, 0, sizeof(rcl_type_t));
-	var->type = T_INT;
-	var->ival = i;
-	return var;
-}
-
-rcl_type_t * rcl_double(double d){
-	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
-	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
-		return NULL;
-	}
-
-	memset(var, 0, sizeof(rcl_type_t));
-	var->type = T_DOUBLE;
-	var->dval = d;
-	return var;
-}
-
-rcl_type_t * rcl_uint(uint32_t u){
-	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
-	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
-		return NULL;
-	}
-
-	memset(var, 0, sizeof(rcl_type_t));
-	var->type = T_UINT;
-	var->uval = u;
-	return var;
-}
-
-struct S_RCL_TYPE * rcl_bool(bool b){
-	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
-	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
-		return NULL;
-	}
-
-	memset(var, 0, sizeof(rcl_type_t));
-	var->type = T_BOOL;
-	var->bval = b;
+	var->string = strdup(s);
 	return var;
 }
 
@@ -129,12 +116,12 @@ rcl_type_t * rcl_list(rcl_type_t * value){
 	return var;
 }
 
-void rcl_copy(rcl_type_t * dst, rcl_type_t * src){
+void rcl_copy(rcl_type_t * dst, const rcl_type_t * src){
 	uint32_t i;
 	/* free unnecessary data */
 	switch(dst->type){
 	case T_STR :
-		free(dst->sval);
+		free(dst->string);
 		break;
 	case T_LIST:
 		for(i = 0; i < dst->list->len; i++){
@@ -148,26 +135,22 @@ void rcl_copy(rcl_type_t * dst, rcl_type_t * src){
 	dst->type = src->type;
 
 	switch(src->type){
-	case T_INT :
-		dst->ival = src->ival;
+	case T_NUM :
+		dst->number = src->number;
 		break;
-	case T_DOUBLE :
-		dst->dval = src->dval;
-		break;
-	case T_UINT :
-		dst->uval = src->uval;
+	case T_BYTE :
+		dst->byte = src->byte;
 		break;
 	case T_BOOL :
-		dst->bval = src->bval;
+		dst->boolean = src->boolean;
 		break;
 	case T_STR :
-		dst->sval = strdup(src->sval);
+		dst->string = strdup(src->string);
 		break;
 	case T_LIST:
 		/* TODO */
 		break;
 	}
-
 }
 
 void rcl_free(rcl_type_t * value){
@@ -178,14 +161,13 @@ void rcl_free(rcl_type_t * value){
 
 	switch(value->type){
 	case T_NULL :
-	case T_INT :
-	case T_DOUBLE :
-	case T_UINT :
+	case T_NUM :
+	case T_BYTE :
 	case T_BOOL :
 		free(value);
 		break;
 	case T_STR :
-		free(value->sval);
+		free(value->string);
 		free(value);
 		break;
 	case T_LIST:
@@ -240,9 +222,9 @@ char * rcl_op_to_string(int op){
 	return strdup("(unknown operation)");
 }
 
-void rcl_val_to_string(char * str, rcl_type_t * value){
+void rcl_val_to_string(char * str, const rcl_type_t * value){
 	uint32_t i;
-	char tmp[50];
+	char tmp[1024];
 
 	if(value == NULL){
 		strcat(str, "(null pointer)");
@@ -253,20 +235,16 @@ void rcl_val_to_string(char * str, rcl_type_t * value){
 	case T_NULL :
 		strcat(str, "null");
 		break;
-	case T_INT :
-		sprintf(tmp, "%d", value->ival);
+	case T_NUM :
+		sprintf(tmp, "%.2f", value->number);
 		strcat(str, tmp);
 		break;
-	case T_DOUBLE :
-		sprintf(str, "%.2f", value->dval);
-		strcat(str, tmp);
-		break;
-	case T_UINT :
-		sprintf(str, "%u (0x%X)", value->uval, value->uval);
+	case T_BYTE :
+		sprintf(tmp, "0x%X (0b" RCL_FMT_BYTE_TO_BINARY_FMT ")", value->byte, RCL_FMT_BYTE_TO_BINARY(value->byte));
 		strcat(str, tmp);
 		break;
 	case T_BOOL :
-		if(value->bval){
+		if(value->boolean){
 			strcat(str, "true");
 		} else {
 			strcat(str, "false");
@@ -274,7 +252,7 @@ void rcl_val_to_string(char * str, rcl_type_t * value){
 		break;
 	case T_STR :
 		strcat(str, "\"");
-		strcat(str, value->sval);
+		strcat(str, value->string);
 		strcat(str, "\"");
 		break;
 	case T_LIST:
@@ -293,22 +271,73 @@ void rcl_val_to_string(char * str, rcl_type_t * value){
 	}
 }
 
-int rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_t * param){
+void rcl_val_to_str_buf(str_buf_t * sb, const struct S_RCL_TYPE * value){
+	uint32_t i;
+	char tmp[1024];
+
+	if(value == NULL){
+		str_buf_add(sb, "(null pointer)");
+		return;
+	}
+
+	switch(value->type){
+	case T_NULL :
+		str_buf_add(sb, "null");
+		break;
+	case T_NUM :
+		sprintf(tmp, "%.4f", value->number);
+		str_buf_add(sb, tmp);
+		break;
+	case T_BYTE :
+		sprintf(tmp, "0x%X (0b" RCL_FMT_BYTE_TO_BINARY_FMT ")", value->byte, RCL_FMT_BYTE_TO_BINARY(value->byte));
+		str_buf_add(sb, tmp);
+		break;
+	case T_BOOL :
+		if(value->boolean){
+			str_buf_add(sb, "true");
+		} else {
+			str_buf_add(sb, "false");
+		}
+		break;
+	case T_STR :
+		str_buf_add(sb, "\"");
+		str_buf_add(sb, value->string);
+		str_buf_add(sb, "\"");
+		break;
+	case T_LIST:
+		str_buf_add(sb, "[ ");
+		for(i = 0; i < value->list->len; i++){
+			rcl_val_to_str_buf(sb, value->list->elements[i]);
+
+			if(i < value->list->len - 1){
+				str_buf_add(sb, ", ");
+			}
+		}
+		str_buf_add(sb, " ]");
+		break;
+	default:
+		str_buf_add(sb, "(invalid type)");
+	}
+}
+
+void rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_t * param){
 #ifdef _DEBUG
-	char str[1024];
-	memset(str, 0, 1024);
-	rcl_val_to_string(str, param);
-	printf(" EXEC: %s %s %s\n", rcl_op_to_string(op), attr, str);
+	str_buf_t * sb = str_buf_create();
+	rcl_val_to_str_buf(sb, param);
+	printf(" EXEC: %s %s %s\n", rcl_op_to_string(op), attr, sb->str);
+	str_buf_destroy(sb);
 #endif
 
-	uint32_t i, ret = -1;
+	uint32_t i;
+	/* loop the array the end is */
 	for(i = 0; ; i++){
-		rcl_attr_desc_t * desc = &rcl_attr_fcns[i];
+		const rcl_attr_desc_t * desc = &rcl_attr_fcns[i];	// to solve warning (Initialization discards qualifiers from pointer target type)
 
 		/* end of array */
 		if(desc->attr == NULL){
-			printf("not supported attribute: '%s'\n", attr);
-			break;
+			rcl_copy(parse_output, rcl_null());
+			printf("rcl error: not supported attribute: '%s'\n", attr);
+			break;	// not found, break from the for loop
 		}
 
 		if(strcmp(attr, desc->attr) == 0){
@@ -317,42 +346,47 @@ int rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_t
 				if(desc->fcn_get){
 					desc->fcn_get(parse_output, param);
 				} else {
-					printf("not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
+					rcl_copy(parse_output, rcl_null());
+					printf("rcl error: not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
 				}
 				break;
 			case OP_SET :
 				if(desc->fcn_set){
 					desc->fcn_set(parse_output, param);
 				} else {
-					printf("not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
+					rcl_copy(parse_output, rcl_null());
+					printf("rcl error: not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
 				}
 				break;
 			case OP_RESET :
 				if(desc->fcn_reset){
 					desc->fcn_reset(parse_output, param);
 				} else {
-					printf("not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
+					rcl_copy(parse_output, rcl_null());
+					printf("rcl error: not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
 				}
 				break;
 			case OP_START :
 				if(desc->fcn_start){
 					desc->fcn_start(parse_output, param);
 				} else {
-					printf("not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
+					rcl_copy(parse_output, rcl_null());
+					printf("rcl error: not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
 				}
 				break;
 			case OP_STOP:
 				if(desc->fcn_stop){
 					desc->fcn_stop(parse_output, param);
 				} else {
-					printf("not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
+					rcl_copy(parse_output, rcl_null());
+					printf("rcl error: not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
 				}
 				break;
 			}
-			break;
+
+			break;	// found, break from the for loop
 		}
 	}
 
 	rcl_free(param);
-	return ret;
 }
