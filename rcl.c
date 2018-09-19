@@ -79,6 +79,19 @@ rcl_type_t * rcl_string(const char * s){
 	return var;
 }
 
+struct S_RCL_TYPE * rcl_error(const char * s){
+	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
+	if(var == NULL){
+		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		return NULL;
+	}
+
+	memset(var, 0, sizeof(rcl_type_t));
+	var->type = T_ERR;
+	var->string = strdup(s);
+	return var;
+}
+
 rcl_type_t * rcl_list(rcl_type_t * value){
 	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
 	if(var == NULL){
@@ -121,9 +134,10 @@ void rcl_copy(rcl_type_t * dst, const rcl_type_t * src){
 	/* free unnecessary data */
 	switch(dst->type){
 	case T_STR :
+	case T_ERR :
 		free(dst->string);
 		break;
-	case T_LIST:
+	case T_LIST :
 		for(i = 0; i < dst->list->len; i++){
 			rcl_free(dst->list->elements[i]);
 		}
@@ -145,9 +159,10 @@ void rcl_copy(rcl_type_t * dst, const rcl_type_t * src){
 		dst->boolean = src->boolean;
 		break;
 	case T_STR :
+	case T_ERR :
 		dst->string = strdup(src->string);
 		break;
-	case T_LIST:
+	case T_LIST :
 		/* TODO */
 		break;
 	}
@@ -167,10 +182,11 @@ void rcl_free(rcl_type_t * value){
 		free(value);
 		break;
 	case T_STR :
+	case T_ERR :
 		free(value->string);
 		free(value);
 		break;
-	case T_LIST:
+	case T_LIST :
 		for(i = 0; i < value->list->len; i++){
 			rcl_free(value->list->elements[i]);
 		}
@@ -217,9 +233,9 @@ char * rcl_op_to_string(int op){
 		return strdup("start");
 	case OP_STOP:
 		return strdup("stop");
+	default:
+		return strdup("(unknown operation)");
 	}
-
-	return strdup("(unknown operation)");
 }
 
 void rcl_val_to_string(char * str, const rcl_type_t * value){
@@ -254,6 +270,10 @@ void rcl_val_to_string(char * str, const rcl_type_t * value){
 		strcat(str, "\"");
 		strcat(str, value->string);
 		strcat(str, "\"");
+		break;
+	case T_ERR :
+		strcat(str, "error: ");
+		strcat(str, value->string);
 		break;
 	case T_LIST:
 		strcat(str, "[ ");
@@ -304,6 +324,10 @@ void rcl_val_to_str_buf(str_buf_t * sb, const struct S_RCL_TYPE * value){
 		str_buf_add(sb, value->string);
 		str_buf_add(sb, "\"");
 		break;
+	case T_ERR :
+		str_buf_add(sb, "error: ");
+		str_buf_add(sb, value->string);
+		break;
 	case T_LIST:
 		str_buf_add(sb, "[ ");
 		for(i = 0; i < value->list->len; i++){
@@ -329,14 +353,16 @@ void rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_
 #endif
 
 	uint32_t i;
+	char str[1024];
+
 	/* loop the array the end is */
 	for(i = 0; ; i++){
 		const rcl_attr_desc_t * desc = &rcl_attr_fcns[i];	// to solve warning (Initialization discards qualifiers from pointer target type)
 
 		/* end of array */
 		if(desc->attr == NULL){
-			rcl_copy(parse_output, rcl_null());
-			printf("rcl error: not supported attribute: '%s'\n", attr);
+			sprintf(str, "not supported attribute '%s'", attr);
+			rcl_copy(parse_output, rcl_error(str));
 			break;	// not found, break from the for loop
 		}
 
@@ -344,42 +370,62 @@ void rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_
 			switch(op){
 			case OP_GET :
 				if(desc->fcn_get){
-					desc->fcn_get(parse_output, param);
+					if(rcle_add_fcn(create_process(desc->fcn_get, rcl_null(), param)) < 0){
+						rcl_copy(parse_output, rcl_error("unable to add function"));
+					} else {
+						rcl_copy(parse_output, rcl_null());
+					}
 				} else {
-					rcl_copy(parse_output, rcl_null());
-					printf("rcl error: not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
+					sprintf(str, "not supported opearation '%s' on '%s'", rcl_op_to_string(op), attr);
+					rcl_copy(parse_output, rcl_error(str));
 				}
 				break;
 			case OP_SET :
 				if(desc->fcn_set){
-					desc->fcn_set(parse_output, param);
+					if(rcle_add_fcn(create_process(desc->fcn_set, rcl_null(), param)) < 0){
+						rcl_copy(parse_output, rcl_error("unable to add function"));
+					} else {
+						rcl_copy(parse_output, rcl_null());
+					}
 				} else {
-					rcl_copy(parse_output, rcl_null());
-					printf("rcl error: not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
+					sprintf(str, "not supported opearation '%s' on '%s'", rcl_op_to_string(op), attr);
+					rcl_copy(parse_output, rcl_error(str));
 				}
 				break;
 			case OP_RESET :
 				if(desc->fcn_reset){
-					desc->fcn_reset(parse_output, param);
+					if(rcle_add_fcn(create_process(desc->fcn_reset, rcl_null(), param)) < 0){
+						rcl_copy(parse_output, rcl_error("unable to add function"));
+					} else {
+						rcl_copy(parse_output, rcl_null());
+					}
 				} else {
-					rcl_copy(parse_output, rcl_null());
-					printf("rcl error: not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
+					sprintf(str, "not supported opearation '%s' on '%s'", rcl_op_to_string(op), attr);
+					rcl_copy(parse_output, rcl_error(str));
 				}
 				break;
 			case OP_START :
 				if(desc->fcn_start){
-					desc->fcn_start(parse_output, param);
+					if(rcle_add_fcn(create_process(desc->fcn_start, rcl_null(), param)) < 0){
+						rcl_copy(parse_output, rcl_error("unable to add function"));
+					} else {
+						rcl_copy(parse_output, rcl_null());
+					}
 				} else {
-					rcl_copy(parse_output, rcl_null());
-					printf("rcl error: not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
+					sprintf(str, "not supported opearation '%s' on '%s'", rcl_op_to_string(op), attr);
+					rcl_copy(parse_output, rcl_error(str));
 				}
 				break;
 			case OP_STOP:
 				if(desc->fcn_stop){
-					desc->fcn_stop(parse_output, param);
+					if(rcle_add_fcn(create_process(desc->fcn_stop, rcl_null(), param)) < 0){
+						rcl_copy(parse_output, rcl_error("unable to add function"));
+					} else {
+						rcl_copy(parse_output, rcl_null());
+					}
 				} else {
-					rcl_copy(parse_output, rcl_null());
-					printf("rcl error: not supported opearation '%s' on '%s'\n", rcl_op_to_string(op), attr);
+					sprintf(str, "not supported opearation '%s' on '%s'", rcl_op_to_string(op), attr);
+					rcl_copy(parse_output, rcl_error(str));
 				}
 				break;
 			}

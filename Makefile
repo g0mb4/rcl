@@ -27,12 +27,13 @@ cfiles:
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c $(PROJECT).tab.c
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c lex.yy.c
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c $(PROJECT).c
+	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c $(PROJECT)_env.c
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c $(PROJECT)_fcns.c
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c str_buf.c
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c main.c
 
 rcl: bison flex cfiles
-	$(CC) -o $(PROJECT) main.o $(PROJECT).tab.o lex.yy.o $(PROJECT).o $(PROJECT)_fcns.o str_buf.o
+	$(CC) -o $(PROJECT) main.o $(PROJECT).tab.o lex.yy.o $(PROJECT).o $(PROJECT)_fcns.o $(PROJECT)_env.o str_buf.o
 
 release: rcl
 	$(SIZE) $(PROJECT)
