@@ -22,17 +22,28 @@ void rcle_print_attrs(void){
 	}
 }
 
-rcle_process_t * create_process(void (* fcn)(rcl_type_t * out, rcl_type_t * in, rcle_process_t * self), rcl_type_t * out, rcl_type_t * in){
+rcle_process_t * create_process(void (* fcn)(rcl_type_t * out, rcl_type_t * in, rcle_process_t * self), rcl_type_t * out, rcl_type_t * in, void * data, uint32_t data_size){
 	rcle_process_t * ret = (rcle_process_t *)malloc(sizeof(rcle_process_t));
 	if(ret == NULL){
 		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
 		return NULL;
 	}
 
+	memset(ret, 0, sizeof(rcle_process_t));
 	ret->state = RS_RUNNING;
 	ret->fcn = fcn;
 	ret->in = rcl_null();
 	ret->out = rcl_null();
+
+	if(data && data_size){
+		ret->data_size = data_size;
+		ret->data = (void *)malloc(data_size);
+		if(ret->data == NULL){
+			fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+			return NULL;
+		}
+		memcpy(ret->data, data, data_size);
+	}
 
 	ret->self = (rcle_process_t *)malloc(sizeof(rcle_process_t));
 	if(ret->self == NULL){
@@ -44,6 +55,7 @@ rcle_process_t * create_process(void (* fcn)(rcl_type_t * out, rcl_type_t * in, 
 	rcl_copy(ret->in, in);
 	rcl_copy(ret->out, out);
 
+	dbg_val( ret->in );
 	return ret;
 }
 
@@ -89,15 +101,6 @@ int rcle_add_fcn(rcle_process_t * proc){
 
 	uint32_t i;
 
-#ifdef _DEBUG
-{
-	str_buf_t * sb = str_buf_create();
-	rcl_val_to_str_buf(sb, proc->in);
-	printf(" ADD: %s\n", sb->str);
-	str_buf_destroy(sb);
-}
-#endif
-
 	/* search for an empty space */
 	for(i = 0; i < rcle_proc_list->cap; i++){
 		if(rcle_proc_list->elements[i] == NULL){
@@ -123,8 +126,11 @@ void rcle_remove_next_fcn(rcl_type_t * out){
 	uint32_t i;
 	for(i = 0; i < rcle_proc_list->cap; i++){
 		if(rcle_proc_list->elements[i] && rcle_proc_list->elements[i]->state == RS_DONE){
-
 			rcl_copy(out, rcle_proc_list->elements[i]->out);
+
+			if(rcle_proc_list->elements[i]->data){
+				free(rcle_proc_list->elements[i]->data);
+			}
 
 			free(rcle_proc_list->elements[i]);
 			rcle_proc_list->elements[i] = NULL;
@@ -145,13 +151,4 @@ void rcle_main_step(rcl_type_t * out){
 	}
 
 	rcle_remove_next_fcn(out);
-
-#ifdef _DEBUG
-{
-	str_buf_t * sb = str_buf_create();
-	rcl_val_to_str_buf(sb, out);
-	printf(" OUT: %s\n", sb->str);
-	str_buf_destroy(sb);
-}
-#endif
 }

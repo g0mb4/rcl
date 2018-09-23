@@ -23,30 +23,59 @@ operator attribute (parameter)
 ```
 const rcl_attr_desc_t rcl_attr_fcns[] = {
 	...
-	{ "conn", 	 /* attribute */
-	   conn_get,	/* pointer to get */
-	   NULL,	 /* pointer to set */
-	   NULL,	 /* pointer to reset */
-	   NULL,	 /* pointer to start */
-	   NULL		 /* pointer to stop */
+	{ "conn",               /* attribute */
+	   (void *)&conn_data,  /* data of the attribute */	
+	   sizeof(conn_data),   /* size of the data */
+	   conn_get,            /* pointer to get */
+	   NULL,                /* pointer to set */
+	   NULL,                /* pointer to reset */
+	   conn_start,          /* pointer to start */
+	   NULL,                /* pointer to stop */
 	},
 	...
 	/* end of structure, do not change! */
-	{ NULL, NULL, NULL, NULL, NULL, NULL }
+	{ NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL }
 };
 ```
 The functions have the signature of ```void fcn(rcl_type_t * /* out */, rcl_type_t * /* in */, rcle_process_t *  /* self */)``` in every case, as you can see in ```rcl.h / struct S_RCL_ATTR_DESC```.
-A simple example for the ```get``` operator on the ```conn``` attribute, which has been added to the  ```rcl_attr_fcns[]```, can be seen bellow.
+A simple example for the ```get``` and ```start``` operator on the ```conn``` attribute, which has been added to the  ```rcl_attr_fcns[]```, can be seen bellow.
 ```
+typedef struct S_CONN_DATA {
+	char * str;
+	uint32_t ctr;
+} conn_data_t;
+
+static conn_data_t conn_data = { "conn_str", 0 };
+
 void conn_get(rcl_type_t * out, rcl_type_t * in, rcle_process_t * self){
 	if(in->type != T_NULL){
 		rcl_copy(out, rcl_error("no parameter is needed"));
 	} else {
-		rcl_copy(out, rcl_string("works!"));
+		conn_data_t * data = ((conn_data_t *)self->data);
+
+		rcl_copy(out, rcl_string(data->str));
 	}
 
 	RCL_RETURN( self );
 }
+
+void conn_start(rcl_type_t * out, rcl_type_t * in, rcle_process_t * self){
+	if(in->type != T_LIST){
+		rcl_copy(out, rcl_error("list parameter is needed"));
+		RCL_RETURN( self );
+	}
+
+	conn_data_t * data = ((conn_data_t *)self->data);
+	rcl_type_t * element = rcl_list_get(in, data->ctr++);
+	if(element->type == T_ERR){
+		rcl_copy(out, rcl_null());
+		RCL_RETURN( self );
+	} else {
+		dbg_val( element );
+	}
+	rcl_free(element);
+}
+
 ```
 See ```rcl.c / rcl_val_to_string()``` as an example for dealing with the ```rcl_type_t *``` type.
 

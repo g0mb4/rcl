@@ -10,6 +10,7 @@
 #include <stdbool.h>
 
 #include "str_buf.h"
+#include "debug.h"
 
 #include "rcl.tab.h"
 
@@ -72,6 +73,7 @@ void rcl_copy(rcl_type_t * dst, const rcl_type_t * src);
 void rcl_free(rcl_type_t * value);
 
 struct S_RCL_TYPE * rcl_list_add(struct S_RCL_TYPE * list, struct S_RCL_TYPE * value);
+rcl_type_t * rcl_list_get(rcl_type_t * list, uint32_t index);
 
 char * rcl_op_to_string(int op);
 void rcl_val_to_string(char * str, const struct S_RCL_TYPE * value);
@@ -90,6 +92,8 @@ typedef struct S_RCLE_PROCESS {
 	void (* fcn)(rcl_type_t * out, rcl_type_t * in, struct S_RCLE_PROCESS * self);
 	rcl_type_t * out;
 	rcl_type_t * in;
+	void * data;
+	uint32_t data_size;
 	struct S_RCLE_PROCESS * self;
 } rcle_process_t;
 
@@ -100,6 +104,8 @@ typedef struct S_RCLE_PROC_LIST {
 
 typedef struct S_RCL_ATTR_DESC {
     const char * attr;
+	void * data;
+	uint32_t data_size;
 	void (* fcn_get)(rcl_type_t * out, rcl_type_t * in, rcle_process_t * self);
 	void (* fcn_set)(rcl_type_t * out, rcl_type_t * in, rcle_process_t * self);
 	void (* fcn_reset)(rcl_type_t * out, rcl_type_t * in, rcle_process_t * self);
@@ -112,7 +118,7 @@ extern const rcl_attr_desc_t rcl_attr_fcns[];	// array def in rcl_fcns.c
 extern rcle_proc_list_t * rcle_proc_list;	// array def in rcl_env.c
 #define RCL_RETURN( s )		{ s->state = RS_DONE; return; }
 
-rcle_process_t * create_process(void (* fcn)(rcl_type_t * out, rcl_type_t * in, rcle_process_t * self), rcl_type_t * out, rcl_type_t * in);
+rcle_process_t * create_process(void (* fcn)(rcl_type_t * out, rcl_type_t * in, rcle_process_t * self), rcl_type_t * out, rcl_type_t * in, void * data, uint32_t data_size);
 
 int rcle_init(void);
 void rcle_destroy(void);

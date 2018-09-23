@@ -1,10 +1,11 @@
 PROJECT=rcl
+OUTPUT=rlci
 
 PREFIX=c:\SysGCC\raspberry\bin\arm-linux-gnueabihf-
 
 SSH_USER=gmb
 SSH_PWD=123456
-SSH_HOST=192.168.0.21
+SSH_HOST=192.168.1.21
 SCP="C:\Program Files (x86)\WinSCP\WinSCP.com"
 
 CC=$(PREFIX)gcc
@@ -16,6 +17,7 @@ BISON=c:\flexbison\bin\win_bison.exe
 
 CFLAGS=-Wall
 DEBUGFLAGS=-g -D _DEBUG -pg
+CLIBS=-lpthread
 
 bison: $(PROJECT).y
 	$(BISON) -d $(PROJECT).y
@@ -33,14 +35,14 @@ cfiles:
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) -c main.c
 
 rcl: bison flex cfiles
-	$(CC) -o $(PROJECT) main.o $(PROJECT).tab.o lex.yy.o $(PROJECT).o $(PROJECT)_fcns.o $(PROJECT)_env.o str_buf.o
+	$(CC) -o $(OUTPUT) main.o $(PROJECT).tab.o lex.yy.o $(PROJECT).o $(PROJECT)_fcns.o $(PROJECT)_env.o str_buf.o $(CLIBS)
 
 release: rcl
-	$(SIZE) $(PROJECT)
+	$(SIZE) $(OUTPUT)
 
 debug: rcl
-	$(SIZE) $(PROJECT)
-	$(SCP) /ini=nul /command "open scp://$(SSH_USER):$(SSH_PWD)@$(SSH_HOST)/ -hostkey=*" "cd /home/$(SSH_USER)" "put $(PROJECT)" "chmod 744 $(PROJECT)" "exit"
+	$(SIZE) $(OUTPUT)
+	$(SCP) /ini=nul /command "open scp://$(SSH_USER):$(SSH_PWD)@$(SSH_HOST)/ -hostkey=*" "cd /home/$(SSH_USER)" "put $(OUTPUT)" "chmod 744 $(OUTPUT)" "exit"
 
 clean:
-	rm -f lex.yy.c *.tab.c *.tab.h *.o $(PROJECT)
+	rm -f lex.yy.c *.tab.c *.tab.h *.o $(OUTPUT)

@@ -19,7 +19,7 @@ int rcl_parse(struct S_RCL_TYPE * parse_output, const char * s){
 rcl_type_t * rcl_null(void){
 	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
 	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		dbg_printf( "malloc() failed" );
 		return NULL;
 	}
 
@@ -30,7 +30,7 @@ rcl_type_t * rcl_null(void){
 rcl_type_t * rcl_number(double n){
 	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
 	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		dbg_printf( "malloc() failed" );
 		return NULL;
 	}
 
@@ -43,7 +43,7 @@ rcl_type_t * rcl_number(double n){
 rcl_type_t * rcl_byte(uint8_t b){
 	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
 	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		dbg_printf( "malloc() failed" );
 		return NULL;
 	}
 
@@ -56,7 +56,7 @@ rcl_type_t * rcl_byte(uint8_t b){
 struct S_RCL_TYPE * rcl_boolean(bool b){
 	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
 	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		dbg_printf( "malloc() failed" );
 		return NULL;
 	}
 
@@ -69,7 +69,7 @@ struct S_RCL_TYPE * rcl_boolean(bool b){
 rcl_type_t * rcl_string(const char * s){
 	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
 	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		dbg_printf( "malloc() failed" );
 		return NULL;
 	}
 
@@ -82,7 +82,7 @@ rcl_type_t * rcl_string(const char * s){
 struct S_RCL_TYPE * rcl_error(const char * s){
 	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
 	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		dbg_printf( "malloc() failed" );
 		return NULL;
 	}
 
@@ -95,7 +95,7 @@ struct S_RCL_TYPE * rcl_error(const char * s){
 rcl_type_t * rcl_list(rcl_type_t * value){
 	rcl_type_t * var = (rcl_type_t *) malloc(sizeof(rcl_type_t));
 	if(var == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		dbg_printf( "malloc() failed" );
 		return NULL;
 	}
 
@@ -103,14 +103,14 @@ rcl_type_t * rcl_list(rcl_type_t * value){
 	var->type = T_LIST;
 	var->list = (rcl_list_t *)malloc(sizeof(rcl_list_t));
 	if(var->list == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		dbg_printf( "malloc() failed" );
 		return NULL;
 	}
 
 	memset(var->list, 0, sizeof(rcl_list_t));
 	var->list->elements = (rcl_type_t **)malloc(sizeof(rcl_type_t *) * RCL_LIST_INIT_SIZE);
 	if(var->list->elements == NULL){
-		fprintf(stderr, "%s:%d:%s() : malloc() failed.\n", __FILE__, __LINE__, __func__);
+		dbg_printf( "malloc() failed" );
 		return NULL;
 	}
 
@@ -118,13 +118,6 @@ rcl_type_t * rcl_list(rcl_type_t * value){
 	var->list->len = 0;
 	var->list->cap = RCL_LIST_INIT_SIZE;
 	var->list->elements[var->list->len++] = value;
-
-#ifdef _DEBUG
-	char str[1024];
-	memset(str, 0, 1024);
-	rcl_val_to_string(str, value);
-	printf("created [%d, %d] = %s\n", (var->list->len - 1), var->list->cap, str);
-#endif
 
 	return var;
 }
@@ -163,7 +156,34 @@ void rcl_copy(rcl_type_t * dst, const rcl_type_t * src){
 		dst->string = strdup(src->string);
 		break;
 	case T_LIST :
-		/* TODO */
+		for(i = 0; i < src->list->len; i++){
+			if(i == 0){
+				dst->list = (rcl_list_t *)malloc(sizeof(rcl_list_t));
+				if(dst->list == NULL){
+					dbg_printf( "malloc() failed" );
+					return NULL;
+				}
+
+				memset(dst->list, 0, sizeof(rcl_list_t));
+				dst->list->elements = (rcl_type_t **)malloc(sizeof(rcl_type_t *) * RCL_LIST_INIT_SIZE);
+				if(dst->list->elements == NULL){
+					dbg_printf( "malloc() failed" );
+					return NULL;
+				}
+
+				rcl_type_t * foo = rcl_null();
+				rcl_copy(foo, src->list->elements[i]);
+
+				memset(dst->list->elements, 0, sizeof(rcl_type_t *) * RCL_LIST_INIT_SIZE);
+				dst->list->len = 0;
+				dst->list->cap = RCL_LIST_INIT_SIZE;
+				dst->list->elements[dst->list->len++] = foo;
+			} else {
+				rcl_type_t * foo = rcl_null();
+				rcl_copy(foo, src->list->elements[i]);
+				rcl_list_add(dst, foo);
+			}
+		}
 		break;
 	}
 }
@@ -202,7 +222,7 @@ rcl_type_t * rcl_list_add(rcl_type_t * list, rcl_type_t * value){
 			list->list->elements = realloc(list->list->elements, sizeof(rcl_type_t *) * list->list->cap * 2);
 
 			if(list->list->elements == NULL){
-				fprintf(stderr, "%s:%d:%s() : realloc() failed.\n", __FILE__, __LINE__, __func__);
+				dbg_printf( "realloc() failed" );
 				return NULL;
 			}
 
@@ -211,14 +231,21 @@ rcl_type_t * rcl_list_add(rcl_type_t * list, rcl_type_t * value){
 
 		list->list->elements[list->list->len++] = value;
 
-#ifdef _DEBUG
-		char str[1024];
-		memset(str, 0, 1024);
-		rcl_val_to_string(str, value);
-		printf("added [%d, %d] = %s\n", (list->list->len - 1), list->list->cap, str);
-#endif
-
 	return list;
+}
+
+rcl_type_t * rcl_list_get(rcl_type_t * list, uint32_t index){
+	rcl_type_t * val = rcl_null();
+
+	if(list->type != T_LIST){
+		rcl_copy(val, rcl_error("not a list"));
+	} else if(index >= list->list->len){
+		rcl_copy(val, rcl_error("index out of bounds"));
+	} else {
+		rcl_copy(val, list->list->elements[index]);
+	}
+
+	return val;
 }
 
 char * rcl_op_to_string(int op){
@@ -346,10 +373,12 @@ void rcl_val_to_str_buf(str_buf_t * sb, const struct S_RCL_TYPE * value){
 
 void rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_t * param){
 #ifdef _DEBUG
+{
 	str_buf_t * sb = str_buf_create();
 	rcl_val_to_str_buf(sb, param);
 	printf(" EXEC: %s %s %s\n", rcl_op_to_string(op), attr, sb->str);
 	str_buf_destroy(sb);
+}
 #endif
 
 	uint32_t i;
@@ -370,7 +399,7 @@ void rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_
 			switch(op){
 			case OP_GET :
 				if(desc->fcn_get){
-					if(rcle_add_fcn(create_process(desc->fcn_get, rcl_null(), param)) < 0){
+					if(rcle_add_fcn(create_process(desc->fcn_get, rcl_null(), param, desc->data, desc->data_size)) < 0){
 						rcl_copy(parse_output, rcl_error("unable to add function"));
 					} else {
 						rcl_copy(parse_output, rcl_null());
@@ -382,7 +411,7 @@ void rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_
 				break;
 			case OP_SET :
 				if(desc->fcn_set){
-					if(rcle_add_fcn(create_process(desc->fcn_set, rcl_null(), param)) < 0){
+					if(rcle_add_fcn(create_process(desc->fcn_set, rcl_null(), param, desc->data, desc->data_size)) < 0){
 						rcl_copy(parse_output, rcl_error("unable to add function"));
 					} else {
 						rcl_copy(parse_output, rcl_null());
@@ -394,7 +423,7 @@ void rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_
 				break;
 			case OP_RESET :
 				if(desc->fcn_reset){
-					if(rcle_add_fcn(create_process(desc->fcn_reset, rcl_null(), param)) < 0){
+					if(rcle_add_fcn(create_process(desc->fcn_reset, rcl_null(), param, desc->data, desc->data_size)) < 0){
 						rcl_copy(parse_output, rcl_error("unable to add function"));
 					} else {
 						rcl_copy(parse_output, rcl_null());
@@ -406,7 +435,7 @@ void rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_
 				break;
 			case OP_START :
 				if(desc->fcn_start){
-					if(rcle_add_fcn(create_process(desc->fcn_start, rcl_null(), param)) < 0){
+					if(rcle_add_fcn(create_process(desc->fcn_start, rcl_null(), param, desc->data, desc->data_size)) < 0){
 						rcl_copy(parse_output, rcl_error("unable to add function"));
 					} else {
 						rcl_copy(parse_output, rcl_null());
@@ -418,7 +447,7 @@ void rcl_execute(rcl_type_t * parse_output, int op, const char * attr, rcl_type_
 				break;
 			case OP_STOP:
 				if(desc->fcn_stop){
-					if(rcle_add_fcn(create_process(desc->fcn_stop, rcl_null(), param)) < 0){
+					if(rcle_add_fcn(create_process(desc->fcn_stop, rcl_null(), param, desc->data, desc->data_size)) < 0){
 						rcl_copy(parse_output, rcl_error("unable to add function"));
 					} else {
 						rcl_copy(parse_output, rcl_null());
