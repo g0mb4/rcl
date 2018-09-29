@@ -6,7 +6,14 @@ I started a project dealing with robots, so I thought it's a perfect opportunity
 
 This is an early version of the implmenetation of rcl.
 
-The Makefile is prepared for Win->Linux (RPi) cross-development (except for debugging :( ).
+The Makefile is prepared for Win->Linux (RPi) cross-development.
+
+# comiple
+Modify the ```PREFIX``` and the ```SSH_*``` parameters in the Makefile.
+for debugging:
+```> make debug```
+for release:
+```> make && make upload```
 
 # syntax
 ```
