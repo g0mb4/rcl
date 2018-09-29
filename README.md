@@ -89,12 +89,15 @@ void conn_start(rcl_type_t * out, rcl_type_t * in, rcle_process_t * self){
 See ```rcl.c / rcl_val_to_string()``` as an example for dealing with the ```rcl_type_t *``` type.
 
 *parameters can be*:
-- null-s (indication of the NULL value)
-- numbers (integers or floating point values)
-- bytes (8 bit values, which is an integer starts with ```0x (hex)``` or ```0b (bin)```)
-- booleans (```true``` or ```false``` (which is ```true```, ha-ha))
-- strings (characters between ```" (double quote)```-s)
-- lists (parameters between ```[ ]```-s, separated by  ```, (comma)```-s, yep, it's recursive)
+- null-s : ```T_NULL``` (indication of the NULL value)
+- numbers : ```T_NUM``` (integers or floating point values)
+- bytes : ```T_BYTE``` (8 bit values, which is an integer starts with ```0x (hex)``` or ```0b (bin)```)
+- booleans : ```T_BOOL``` (```true``` or ```false``` (which is ```true```, ha-ha))
+- strings : ```T_STR``` (characters between ```" (double quote)```-s)
+- lists : ```T_LIST``` (parameters between ```[ ]```-s, separated by  ```, (comma)```-s, yep, it's recursive)
+
+there is one other type:
+- error : ```T_ERR``` (indication of an error, basically a string)
 
 # examples
 ```
