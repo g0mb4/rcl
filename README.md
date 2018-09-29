@@ -10,8 +10,10 @@ The Makefile is prepared for Win->Linux (RPi) cross-development.
 
 # comiple
 Modify the ```PREFIX``` and the ```SSH_*``` parameters in the Makefile.
+
 for debugging:
 ```> make debug```
+
 for release:
 ```> make && make upload```
 
